@@ -1,18 +1,22 @@
 package com.ec.checkoutplanner.exception;
 
 import com.ec.checkoutplanner.dto.errors.ErrorResponse;
+import com.ec.checkoutplanner.exception.employee.EmployeeCreationException;
 import com.ec.checkoutplanner.exception.employee.EmployeeNotFoundException;
+import com.ec.checkoutplanner.exception.shiftPlan.InvalidShiftPlanRequestException;
+import com.ec.checkoutplanner.exception.shiftPlan.ShiftAlreadyPlannedException;
+import com.ec.checkoutplanner.exception.shiftPlan.ShiftAssignmentConflictException;
+import com.ec.checkoutplanner.exception.shiftPlan.ShiftAssignmentCreationException;
+import com.ec.checkoutplanner.exception.shiftWish.ShiftWishCreationException;
+import com.ec.checkoutplanner.exception.shiftWish.ShiftWishRetrievalException;
 import com.ec.checkoutplanner.exception.shiftWish.WishAlreadyExistsException;
+import jakarta.persistence.EntityExistsException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import com.ec.checkoutplanner.exception.employee.EmployeeCreationException;
-import com.ec.checkoutplanner.exception.shiftPlan.*;
-import com.ec.checkoutplanner.exception.shiftWish.ShiftWishCreationException;
-import jakarta.persistence.EntityExistsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 @ControllerAdvice
@@ -69,6 +73,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ShiftWishCreationException.class)
     public ResponseEntity<ErrorResponse> handleWishCreation(ShiftWishCreationException ex) {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new ErrorResponse(ex.getMessage()));
+    }
+
+    @ExceptionHandler(ShiftWishCreationException.class)
+    public ResponseEntity<ErrorResponse> ShiftWishRetrievalException(ShiftWishRetrievalException ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(ex.getMessage()));
     }
 
     // === GENERIC FALLBACK ===
