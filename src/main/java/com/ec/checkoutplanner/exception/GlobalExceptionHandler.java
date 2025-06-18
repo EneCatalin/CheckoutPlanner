@@ -75,7 +75,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new ErrorResponse(ex.getMessage()));
     }
 
-    @ExceptionHandler(ShiftWishCreationException.class)
+    @ExceptionHandler(ShiftWishRetrievalException.class)
     public ResponseEntity<ErrorResponse> ShiftWishRetrievalException(ShiftWishRetrievalException ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(ex.getMessage()));
     }
