@@ -34,9 +34,6 @@ import java.time.LocalDate;
         this.employee = employee;
     }
 
-
-    // Getters and setters
-
     public Long getId() {
         return id;
     }

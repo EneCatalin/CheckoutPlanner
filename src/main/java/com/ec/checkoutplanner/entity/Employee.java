@@ -15,7 +15,6 @@ public class Employee {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    // getters and setters
     public Employee() {
 
     }
@@ -31,8 +30,6 @@ public class Employee {
         this.name = name;
         this.role = role;
     }
-
-
 
     public Long getId() {
         return id;

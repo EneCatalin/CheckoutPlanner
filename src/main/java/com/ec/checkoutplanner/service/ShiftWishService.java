@@ -3,12 +3,19 @@ package com.ec.checkoutplanner.service;
 import com.ec.checkoutplanner.dto.CreateShiftWishRequest;
 import com.ec.checkoutplanner.entity.Employee;
 import com.ec.checkoutplanner.entity.ShiftWish;
+import com.ec.checkoutplanner.exception.employee.EmployeeNotFoundException;
+import com.ec.checkoutplanner.exception.shiftWish.WishAlreadyExistsException;
+import com.ec.checkoutplanner.exception.shiftWish.ShiftWishCreationException;
 import com.ec.checkoutplanner.repository.EmployeeRepository;
 import com.ec.checkoutplanner.repository.ShiftWishRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ShiftWishService {
+
+    private static final Logger logger = LoggerFactory.getLogger(ShiftWishService.class);
 
     private final ShiftWishRepository shiftWishRepository;
     private final EmployeeRepository employeeRepository;
@@ -20,10 +27,14 @@ public class ShiftWishService {
 
     public ShiftWish createWish(CreateShiftWishRequest request) {
         Employee employee = employeeRepository.findById(request.employeeId())
-                .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
+                .orElseThrow(() -> {
+                    logger.warn("Employee not found with ID: {}", request.employeeId());
+                    return new EmployeeNotFoundException("Employee not found with ID: " + request.employeeId());
+                });
 
         if (shiftWishRepository.existsByEmployeeAndDate(employee, request.date())) {
-            throw new IllegalStateException("Wish already submitted for this date");
+            logger.warn("Wish already exists for employee {} on {}", employee.getId(), request.date());
+            throw new WishAlreadyExistsException("Shift wish already exists for this employee on " + request.date());
         }
 
         ShiftWish wish = new ShiftWish();
@@ -31,6 +42,13 @@ public class ShiftWishService {
         wish.setDate(request.date());
         wish.setShiftType(request.shiftType());
 
-        return shiftWishRepository.save(wish);
+        try {
+            ShiftWish savedWish = shiftWishRepository.save(wish);
+            logger.info("Shift wish created: {}", savedWish);
+            return savedWish;
+        } catch (Exception e) {
+            logger.error("Failed to save shift wish: {}", wish, e);
+            throw new ShiftWishCreationException("Failed to save shift wish", e);
+        }
     }
 }

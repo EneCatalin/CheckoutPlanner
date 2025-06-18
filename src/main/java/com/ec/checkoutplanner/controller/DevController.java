@@ -22,6 +22,9 @@ public class DevController {
         this.employeeRepository = employeeRepository;
     }
 
+    //? Bad idea in general, but this is a small demo
+    //? Also it has no exception handler
+
     @PostMapping("/seed")
     public ResponseEntity<List<Employee>> seed() {
         if (employeeRepository.count() > 0) {

@@ -7,8 +7,15 @@ import com.ec.checkoutplanner.dto.ScheduledShiftResponse;
 import com.ec.checkoutplanner.dto.ShiftPlanResponse;
 import com.ec.checkoutplanner.entity.Employee;
 import com.ec.checkoutplanner.entity.ShiftPlan;
+import com.ec.checkoutplanner.exception.employee.EmployeeNotFoundException;
+import com.ec.checkoutplanner.exception.shiftPlan.InvalidShiftPlanRequestException;
+import com.ec.checkoutplanner.exception.shiftPlan.ShiftAlreadyPlannedException;
+import com.ec.checkoutplanner.exception.shiftPlan.ShiftAssignmentConflictException;
+import com.ec.checkoutplanner.exception.shiftPlan.ShiftAssignmentCreationException;
 import com.ec.checkoutplanner.repository.EmployeeRepository;
 import com.ec.checkoutplanner.repository.ShiftPlanRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -21,6 +28,8 @@ import java.util.stream.Collectors;
 @Service
 public class ShiftPlanService {
 
+    private static final Logger logger = LoggerFactory.getLogger(ShiftPlanService.class);
+
     private final ShiftPlanRepository shiftPlanRepository;
     private final EmployeeRepository employeeRepository;
 
@@ -31,36 +40,49 @@ public class ShiftPlanService {
 
     public List<ShiftPlanResponse> createPlan(CreateShiftPlanRequest request) {
         if (request.employeeIds().size() != 2) {
-            throw new IllegalArgumentException("Each shift must have exactly two employees.");
+            logger.warn("Invalid shift plan request: {}", request);
+            throw new InvalidShiftPlanRequestException("Each shift must have exactly two employees.");
         }
 
         long existingCount = shiftPlanRepository.countByDateAndShiftType(request.date(), request.shiftType());
         if (existingCount > 0) {
-            throw new IllegalStateException("This shift has already been assigned.");
+            logger.warn("Shift already planned for {} on {}", request.shiftType(), request.date());
+            throw new ShiftAlreadyPlannedException("This shift has already been assigned.");
         }
 
         List<ShiftPlanResponse> responses = new ArrayList<>();
 
         for (Long employeeId : request.employeeIds()) {
             Employee employee = employeeRepository.findById(employeeId)
-                    .orElseThrow(() -> new IllegalArgumentException("Employee not found: " + employeeId));
+                    .orElseThrow(() -> {
+                        logger.warn("Employee not found: {}", employeeId);
+                        return new EmployeeNotFoundException("Employee not found: " + employeeId);
+                    });
 
             boolean alreadyAssigned = shiftPlanRepository.existsByEmployeeAndDate(employee, request.date());
             if (alreadyAssigned) {
-                throw new IllegalStateException("Employee " + employee.getName() + " is already assigned on this date.");
+                logger.warn("Employee {} already assigned on {}", employee.getId(), request.date());
+                throw new ShiftAssignmentConflictException("Employee " + employee.getName() + " is already assigned on " + request.date());
             }
 
             ShiftPlan plan = new ShiftPlan();
             plan.setDate(request.date());
             plan.setShiftType(request.shiftType());
             plan.setEmployee(employee);
-            ShiftPlan saved = shiftPlanRepository.save(plan);
 
-            responses.add(mapToResponse(saved));
+            try {
+                ShiftPlan saved = shiftPlanRepository.save(plan);
+                logger.info("Shift assignment created: {}", saved);
+                responses.add(mapToResponse(saved));
+            } catch (Exception e) {
+                logger.error("Failed to save shift plan: {}", plan, e);
+                throw new ShiftAssignmentCreationException("Failed to save shift assignment", e);
+            }
         }
 
         return responses;
     }
+
     public List<ScheduledShiftResponse> getScheduleForDate(LocalDate date) {
         List<ShiftPlan> plans = shiftPlanRepository.findByDate(date);
 
@@ -74,7 +96,6 @@ public class ShiftPlanService {
                         ), Collectors.toList())
                 ));
 
-        // Ensure both EARLY and LATE are present, even if empty
         return Arrays.stream(ShiftType.values())
                 .map(shiftType -> new ScheduledShiftResponse(
                         shiftType,
@@ -82,6 +103,7 @@ public class ShiftPlanService {
                 ))
                 .toList();
     }
+
     private ShiftPlanResponse mapToResponse(ShiftPlan plan) {
         return new ShiftPlanResponse(
                 plan.getId(),
@@ -92,5 +114,5 @@ public class ShiftPlanService {
                 plan.getEmployee().getRole()
         );
     }
-
 }
+
