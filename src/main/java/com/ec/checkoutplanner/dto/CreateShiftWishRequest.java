@@ -1,4 +1,7 @@
 package com.ec.checkoutplanner.dto;
 
-public class CreateShiftWishRequest {
-}
+import com.ec.checkoutplanner.constants.ShiftType;
+
+import java.time.LocalDate;
+
+public record CreateShiftWishRequest(Long employeeId, LocalDate date, ShiftType shiftType) {}

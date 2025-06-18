@@ -1,4 +1,5 @@
 package com.ec.checkoutplanner.dto;
 
-public record CreateEmployeeRequest() {
-}
+import com.ec.checkoutplanner.constants.Role;
+
+public record CreateEmployeeRequest(String name, Role role) {}
