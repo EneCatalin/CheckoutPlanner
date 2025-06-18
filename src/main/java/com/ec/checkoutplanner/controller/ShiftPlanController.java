@@ -1,15 +1,14 @@
 package com.ec.checkoutplanner.controller;
 
 import com.ec.checkoutplanner.dto.CreateShiftPlanRequest;
+import com.ec.checkoutplanner.dto.ScheduledShiftResponse;
 import com.ec.checkoutplanner.dto.ShiftPlanResponse;
 import com.ec.checkoutplanner.service.ShiftPlanService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -20,6 +19,12 @@ public class ShiftPlanController {
 
     public ShiftPlanController(ShiftPlanService shiftPlanService) {
         this.shiftPlanService = shiftPlanService;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<ScheduledShiftResponse>> getSchedule(@RequestParam LocalDate date) {
+        List<ScheduledShiftResponse> schedule = shiftPlanService.getScheduleForDate(date);
+        return ResponseEntity.ok(schedule);
     }
 
     @PostMapping

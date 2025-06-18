@@ -1,6 +1,9 @@
 package com.ec.checkoutplanner.service;
 
+import com.ec.checkoutplanner.constants.ShiftType;
 import com.ec.checkoutplanner.dto.CreateShiftPlanRequest;
+import com.ec.checkoutplanner.dto.ScheduledEmployee;
+import com.ec.checkoutplanner.dto.ScheduledShiftResponse;
 import com.ec.checkoutplanner.dto.ShiftPlanResponse;
 import com.ec.checkoutplanner.entity.Employee;
 import com.ec.checkoutplanner.entity.ShiftPlan;
@@ -8,8 +11,12 @@ import com.ec.checkoutplanner.repository.EmployeeRepository;
 import com.ec.checkoutplanner.repository.ShiftPlanRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ShiftPlanService {
@@ -54,7 +61,27 @@ public class ShiftPlanService {
 
         return responses;
     }
+    public List<ScheduledShiftResponse> getScheduleForDate(LocalDate date) {
+        List<ShiftPlan> plans = shiftPlanRepository.findByDate(date);
 
+        Map<ShiftType, List<ScheduledEmployee>> grouped = plans.stream()
+                .collect(Collectors.groupingBy(
+                        ShiftPlan::getShiftType,
+                        Collectors.mapping(plan -> new ScheduledEmployee(
+                                plan.getEmployee().getId(),
+                                plan.getEmployee().getName(),
+                                plan.getEmployee().getRole()
+                        ), Collectors.toList())
+                ));
+
+        // Ensure both EARLY and LATE are present, even if empty
+        return Arrays.stream(ShiftType.values())
+                .map(shiftType -> new ScheduledShiftResponse(
+                        shiftType,
+                        grouped.getOrDefault(shiftType, List.of())
+                ))
+                .toList();
+    }
     private ShiftPlanResponse mapToResponse(ShiftPlan plan) {
         return new ShiftPlanResponse(
                 plan.getId(),
