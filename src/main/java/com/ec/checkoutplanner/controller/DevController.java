@@ -3,6 +3,8 @@ package com.ec.checkoutplanner.controller;
 import com.ec.checkoutplanner.constants.Role;
 import com.ec.checkoutplanner.entity.Employee;
 import com.ec.checkoutplanner.repository.EmployeeRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,6 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/dev")
+@Tag(name = "Development Utilities", description = "Endpoints for development/testing purposes only")
 public class DevController {
 
     private final EmployeeRepository employeeRepository;
@@ -22,10 +25,11 @@ public class DevController {
         this.employeeRepository = employeeRepository;
     }
 
-    //? Bad idea in general, but this is a small demo
-    //? Also it has no exception handler
-
     @PostMapping("/seed")
+    @Operation(
+            summary = "Seed the database with test data",
+            description = "Creates 3 employee accounts and 2 admin accounts. Only works if the employee table is empty. Use for demo/testing purposes only."
+    )
     public ResponseEntity<List<Employee>> seed() {
         if (employeeRepository.count() > 0) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
@@ -41,5 +45,4 @@ public class DevController {
         List<Employee> saved = employeeRepository.saveAll(employees);
         return ResponseEntity.ok(saved);
     }
-
 }

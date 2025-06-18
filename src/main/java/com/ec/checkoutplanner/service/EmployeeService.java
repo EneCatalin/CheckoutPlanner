@@ -1,6 +1,5 @@
 package com.ec.checkoutplanner.service;
 
-import com.ec.checkoutplanner.constants.Role;
 import com.ec.checkoutplanner.dto.CreateEmployeeRequest;
 import com.ec.checkoutplanner.entity.Employee;
 import com.ec.checkoutplanner.exception.employee.EmployeeCreationException;
