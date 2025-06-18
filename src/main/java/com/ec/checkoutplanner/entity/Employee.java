@@ -27,6 +27,12 @@ public class Employee {
         this.role = role;
     }
 
+    public Employee(String name, Role role) {
+        this.name = name;
+        this.role = role;
+    }
+
+
 
     public Long getId() {
         return id;
