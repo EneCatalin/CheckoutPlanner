@@ -39,7 +39,7 @@ public class ShiftWishController {
             description = "Returns a list of all submitted shift wishes"
     )
     public ResponseEntity<List<ShiftWish>> getAllWishes() {
-        return ResponseEntity.ok(shiftWishService.getAllWishes());
+        return ResponseEntity.ok(shiftWishService.getAllShiftWishes());
     }
 
     @GetMapping("/{name}")

@@ -55,7 +55,7 @@ public class ShiftWishService {
         }
     }
 
-    public List<ShiftWish> getAllWishes() {
+    public List<ShiftWish> getAllShiftWishes() {
         try {
             return shiftWishRepository.findAll();
         } catch (Exception e) {
@@ -78,5 +78,4 @@ public class ShiftWishService {
             throw new ShiftWishRetrievalException("Could not retrieve shift wishes for employee: " + name, e);
         }
     }
-
 }
